@@ -1,4 +1,4 @@
-// calculator.js — основная логика приложения без eval
+// calculator.js — логика калькулятора (без eval)
 
 /**
  * @typedef {{type: 'percent', value: number, fraction: number}} PercentMarker
@@ -19,7 +19,7 @@ const themeToggleLabel = themeToggleBtn ? themeToggleBtn.querySelector('.toggle-
 const copyBtnDefaultText = copyBtn ? ((copyBtn.textContent || '').trim() || 'Копировать') : 'Копировать';
 
 // ---------- Состояние ----------
-let expression = '';
+let expression = ''; // инфиксная строка, которую собирает пользователь
 const history = [];
 const HISTORY_LIMIT = 30;
 const THEME_KEY = 'calculator-theme';
@@ -83,6 +83,7 @@ const CONSTANTS = [
 const isDigit = (ch) => /[0-9]/.test(ch);
 const isOperatorChar = (ch) => Object.prototype.hasOwnProperty.call(OPERATORS, ch);
 
+// Округление результата для избежания floating point артефактов
 /**
  * Форматирует число, убирая лишние нули и артефакты плавающей точки.
  * @param {number} num
@@ -90,7 +91,9 @@ const isOperatorChar = (ch) => Object.prototype.hasOwnProperty.call(OPERATORS, c
  */
 function formatNumber(num) {
   if (typeof num !== 'number' || !Number.isFinite(num)) return String(num);
+  // Округляем до 12 значащих знаков в мантиссе
   const rounded = Number.parseFloat(num.toPrecision(12));
+  // Убираем лишние нули после запятой
   return String(rounded).replace(/\.0+$|(\.\d*[1-9])0+$/,'$1');
 }
 
@@ -227,6 +230,7 @@ function matchConstant(expr, index) {
  * @returns {Token[]}
  */
 function tokenize(expr) {
+  // Лексер: разбиваем строку на токены (числа, скобки, операторы)
   const tokens = [];
   let i = 0;
   const pushOperator = (value) => {
@@ -276,6 +280,7 @@ function tokenize(expr) {
     }
 
     if (isDigit(ch) || ch === '.') {
+      // читаем число (включая десятичную часть)
       let num = ch;
       let dotCount = ch === '.' ? 1 : 0;
       while (i + 1 < expr.length) {
@@ -290,6 +295,7 @@ function tokenize(expr) {
           i++;
         } else break;
       }
+      // валидируем формат (например, не две точки)
       tokens.push({type: 'number', value: parseFloat(num)});
       i++;
       continue;
@@ -318,7 +324,7 @@ function tokenize(expr) {
       i++;
       continue;
     }
-
+    // если дошли сюда — встретили неизвестный символ
     throw new Error(`Неизвестный символ: ${ch}`);
   }
   return tokens;
@@ -335,17 +341,20 @@ function flushPendingUnary(ops, output) {
   }
 }
 
+// ---------- Парсер: Shunting Yard (инфикс -> постфикс) ----------
 /**
  * Алгоритм сортировочной станции (Shunting Yard).
  * @param {string} infix
  * @returns {Token[]}
  */
 function infixToRPN(infix) {
+  // Возвращает массив токенов в постфиксной нотации, или выбрасывает Error
   const prepared = normalizeAbsolute(infix);
   const tokens = tokenize(prepared);
   const output = [];
-  const ops = [];
+  const ops = []; // стек операторов
 
+  // Шунтинг-ярд
   for (const token of tokens) {
     if (token.type === 'number') {
       output.push(token);
@@ -380,6 +389,7 @@ function infixToRPN(infix) {
       if (token.value === '(') {
         ops.push(token);
       } else {
+        // token is ')'
         let matched = false;
         while (ops.length > 0) {
           const top = ops.pop();
@@ -410,15 +420,17 @@ function infixToRPN(infix) {
     }
   }
 
+  // Перенести остаток стека
   while (ops.length > 0) {
     const top = ops.pop();
     if (top.type === 'paren') throw new Error('Пропущена закрывающая скобка');
     output.push(top);
   }
 
-  return output;
+  return output; // массив токенов
 }
 
+// ---------- Вычисление RPN ----------
 /**
  * Вычисляет выражение в постфиксной нотации.
  * @param {Token[]} tokens
@@ -475,6 +487,7 @@ function evaluateRPN(tokens) {
   return resolveValue(stack[0]);
 }
 
+// ---------- Основная функция вычисления выражения ----------
 /**
  * Вычисляет пользовательское выражение.
  * @param {string} infix
@@ -486,10 +499,11 @@ function computeExpression(infix) {
   return evaluateRPN(rpn);
 }
 
-// ---------- Работа с UI ----------
+// ---------- UI: обновление дисплея ----------
 function updateDisplay() {
   if (exprEl) exprEl.textContent = expression;
   if (expression === '' && resultEl) resultEl.value = '0';
+  // Примечание: результат не пересчитывается при каждом вводе — вычисляем по "="
 }
 
 function hasOperandForPostfix(last) {
@@ -500,14 +514,19 @@ function hasOperandForPostfix(last) {
  * Вставляет значение из кнопки в выражение.
  * @param {string} val
  */
+// ---------- Обработчики действий ----------
 function insertValue(val) {
+  // простая валидация: не разрешаем две точки подряд в числе и два оператора подряд
   const last = expression[expression.length - 1];
 
   if (val === '.') {
+    // если последнее — цифра и уже нет точки в текущем числе
+    // находим начало текущего числа
     let i = expression.length - 1;
     while (i >= 0 && (isDigit(expression[i]) || expression[i] === '.')) i--;
     const current = expression.slice(i + 1);
-    if (current.includes('.')) return;
+    if (current.includes('.')) return; // уже есть точка
+    // если пусто или последний не цифра -> добавить "0." вместо "."
     if (!current || isOperatorChar(last) || last === '(' || !last) {
       expression += '0.';
     } else {
@@ -575,13 +594,15 @@ function insertValue(val) {
   }
 
   if (isOperatorChar(val)) {
+    // запрещаем оператор в начале (кроме "-" для отрицательных чисел — можно расширить)
     if (!expression) {
       if (val === '-') {
-        expression = '-';
+        expression = '-'; // разрешаем отрицание
         updateDisplay();
       }
       return;
     }
+    // если последний — оператор, заменим его (чтобы не было ++ или +-)
     if (isOperatorChar(last)) {
       expression = expression.slice(0, -1) + val;
     } else {
@@ -590,7 +611,7 @@ function insertValue(val) {
     updateDisplay();
     return;
   }
-
+  // если вставляем цифру/точку/скобку/оператор — добавляем
   expression += val;
   updateDisplay();
 }
@@ -721,6 +742,9 @@ function handleAction(action) {
       const formatted = formatNumber(value);
       if (resultEl) resultEl.value = formatted;
       addToHistory(expression, formatted);
+      // Можно также сохранить в history
+      // expression = String(result); // либо оставить выражение, по желанию
+      // updateDisplay();
     } catch (err) {
       if (resultEl) resultEl.value = err.message;
       console.error(err);
@@ -728,6 +752,7 @@ function handleAction(action) {
     return;
   }
   if (action === 'paren-open') {
+    // легко вставить '('
     insertValue('(');
     return;
   }
@@ -740,7 +765,7 @@ function handleAction(action) {
   }
 }
 
-// ---------- События ----------
+// ---------- Делегирование кликов на контейнер .keys ----------
 if (keys) {
   keys.addEventListener('click', (e) => {
     const target = e.target;
@@ -757,6 +782,7 @@ if (keys) {
   });
 }
 
+// ---------- Поддержка клавиатуры ----------
 if (document) {
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey) return;
