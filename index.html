@@ -1,45 +1,92 @@
 <!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Учебный калькулятор</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <main class="app" aria-label="Калькулятор">
-    <section class="calculator" role="application" aria-label="Калькулятор">
-      <!-- Верхняя панель: выражение -->
-      <div class="display" aria-live="polite">
-        <div id="expr" class="expression" aria-hidden="true"></div>
-        <input id="result" class="result" type="text" value="0" aria-label="Результат" readonly />
-      </div>
-      <!-- Кнопки: мы используем data-action/data-value для маршрутизации -->
-      <div class="keys" role="group" aria-label="Клавиши калькулятора">
-        <button class="btn control" data-action="clear" aria-label="Очистить">C</button>
-        <button class="btn control" data-action="backspace" aria-label="Удалить символ">←</button>
-        <button class="btn control" data-action="paren-open" aria-label="Открыть скобку">(</button>
-        <button class="btn control" data-action="paren-close" aria-label="Закрыть скобку">)</button>
-        <button class="btn number" data-value="7">7</button>
-        <button class="btn number" data-value="8">8</button>
-        <button class="btn number" data-value="9">9</button>
-        <button class="btn operator" data-value="/" aria-label="Деление">÷</button>
-        <button class="btn number" data-value="4">4</button>
-        <button class="btn number" data-value="5">5</button>
-        <button class="btn number" data-value="6">6</button>
-        <button class="btn operator" data-value="*" aria-label="Умножение">×</button>
-        <button class="btn number" data-value="1">1</button>
-        <button class="btn number" data-value="2">2</button>
-        <button class="btn number" data-value="3">3</button>
-        <button class="btn operator" data-value="-" aria-label="Вычитание">−</button>
-        <button class="btn number zero" data-value="0">0</button>
-        <button class="btn decimal" data-value=".">.</button>
-        <button class="btn equals" data-action="equals" aria-label="Равно">=</button>
-        <button class="btn operator" data-value="+" aria-label="Сложение">+</button>
-      </div>
-    </section>
-  </main>
-  <script src="calculator.js" defer></script>
-</body>
-</html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Научный калькулятор</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <main class="app" aria-label="Научный калькулятор">
+      <header class="toolbar">
+        <button type="button" class="toggle-btn" id="themeToggle" aria-pressed="false">
+          <span class="toggle-thumb" aria-hidden="true"></span>
+          <span class="toggle-label">Светлая</span>
+        </button>
+        <button type="button" class="history-toggle" id="historyToggle" aria-controls="historyPanel" aria-expanded="false">
+          История
+        </button>
+      </header>
 
+      <section class="calculator" role="application" aria-label="Интерфейс калькулятора">
+        <div class="display" aria-live="polite">
+          <div id="expr" class="expression" aria-hidden="true"></div>
+          <div class="result-row">
+            <input id="result" class="result" type="text" value="0" aria-label="Результат" readonly>
+            <button type="button" id="copyResult" class="copy-btn" data-action="copy">Копировать</button>
+          </div>
+        </div>
+
+        <div class="panels">
+          <div class="keys" role="group" aria-label="Кнопки калькулятора">
+            <button class="btn control" data-action="clear" aria-label="Очистить">C</button>
+            <button class="btn control" data-action="backspace" aria-label="Удалить символ">⌫</button>
+            <button class="btn control" data-action="paren-open" aria-label="Открывающая скобка">(</button>
+            <button class="btn control" data-action="paren-close" aria-label="Закрывающая скобка">)</button>
+
+            <button class="btn function" data-value="|" aria-label="Модуль через вертикальные черты">|x|</button>
+            <button class="btn function" data-value="abs" aria-label="Функция abs">abs</button>
+            <button class="btn constant" data-value="π" aria-label="Константа пи">π</button>
+            <button class="btn constant" data-value="e" aria-label="Константа e">e</button>
+
+            <button class="btn function" data-value="sin">sin</button>
+            <button class="btn function" data-value="cos">cos</button>
+            <button class="btn function" data-value="tan">tan</button>
+            <button class="btn function" data-value="√" aria-label="Квадратный корень">√</button>
+
+            <button class="btn function" data-value="asin">asin</button>
+            <button class="btn function" data-value="acos">acos</button>
+            <button class="btn function" data-value="atan">atan</button>
+            <button class="btn operator" data-value="^" aria-label="Степень">xʸ</button>
+
+            <button class="btn function" data-value="log">log</button>
+            <button class="btn function" data-value="ln">ln</button>
+            <button class="btn operator" data-value="%" aria-label="Проценты">%</button>
+            <button class="btn operator" data-value="!" aria-label="Факториал">!</button>
+
+            <button class="btn number" data-value="7">7</button>
+            <button class="btn number" data-value="8">8</button>
+            <button class="btn number" data-value="9">9</button>
+            <button class="btn operator" data-value="/" aria-label="Деление">÷</button>
+
+            <button class="btn number" data-value="4">4</button>
+            <button class="btn number" data-value="5">5</button>
+            <button class="btn number" data-value="6">6</button>
+            <button class="btn operator" data-value="*" aria-label="Умножение">×</button>
+
+            <button class="btn number" data-value="1">1</button>
+            <button class="btn number" data-value="2">2</button>
+            <button class="btn number" data-value="3">3</button>
+            <button class="btn operator" data-value="-" aria-label="Вычитание">−</button>
+
+            <button class="btn number span-2" data-value="0">0</button>
+            <button class="btn decimal" data-value=".">.</button>
+            <button class="btn decimal" data-value="," aria-label="Разделитель аргументов">,</button>
+            <button class="btn operator" data-value="+" aria-label="Сложение">+</button>
+
+            <button class="btn equals span-4" data-action="equals" aria-label="Вычислить">=</button>
+          </div>
+
+          <aside class="history-panel" id="historyPanel" aria-label="История вычислений" aria-hidden="true">
+            <div class="history-header">
+              <h2>История</h2>
+              <button type="button" class="history-clear" id="historyClear">Очистить</button>
+            </div>
+            <ul class="history-list" id="historyList"></ul>
+          </aside>
+        </div>
+      </section>
+    </main>
+    <script src="calculator.js" defer></script>
+  </body>
+</html>
