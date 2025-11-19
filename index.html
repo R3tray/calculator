@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Учебный калькулятор</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app" aria-label="Калькулятор">
+    <section class="calculator" role="application" aria-label="Калькулятор">
+      <!-- Верхняя панель: выражение -->
+      <div class="display" aria-live="polite">
+        <div id="expr" class="expression" aria-hidden="true"></div>
+        <input id="result" class="result" type="text" value="0" aria-label="Результат" readonly />
+      </div>
+      <!-- Кнопки: мы используем data-action/data-value для маршрутизации -->
+      <div class="keys" role="group" aria-label="Клавиши калькулятора">
+        <button class="btn control" data-action="clear" aria-label="Очистить">C</button>
+        <button class="btn control" data-action="backspace" aria-label="Удалить символ">←</button>
+        <button class="btn control" data-action="paren-open" aria-label="Открыть скобку">(</button>
+        <button class="btn control" data-action="paren-close" aria-label="Закрыть скобку">)</button>
+        <button class="btn number" data-value="7">7</button>
+        <button class="btn number" data-value="8">8</button>
+        <button class="btn number" data-value="9">9</button>
+        <button class="btn operator" data-value="/" aria-label="Деление">÷</button>
+        <button class="btn number" data-value="4">4</button>
+        <button class="btn number" data-value="5">5</button>
+        <button class="btn number" data-value="6">6</button>
+        <button class="btn operator" data-value="*" aria-label="Умножение">×</button>
+        <button class="btn number" data-value="1">1</button>
+        <button class="btn number" data-value="2">2</button>
+        <button class="btn number" data-value="3">3</button>
+        <button class="btn operator" data-value="-" aria-label="Вычитание">−</button>
+        <button class="btn number zero" data-value="0">0</button>
+        <button class="btn decimal" data-value=".">.</button>
+        <button class="btn equals" data-action="equals" aria-label="Равно">=</button>
+        <button class="btn operator" data-value="+" aria-label="Сложение">+</button>
+      </div>
+    </section>
+  </main>
+  <script src="calculator.js" defer></script>
+</body>
+</html>
+
