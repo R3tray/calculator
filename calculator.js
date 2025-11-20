@@ -234,14 +234,17 @@ function tokenize(expr) {
   const tokens = [];
   let i = 0;
   const pushOperator = (value) => {
-    if (value === '-') {
-      const prev = tokens[tokens.length - 1];
-      if (!prev || (prev.type === 'operator') ||
-          (prev.type === 'paren' && prev.value === '(') ||
-          prev.type === 'unary' || prev.type === 'function' ||
-          prev.type === 'comma') {
-        tokens.push({type: 'number', value: 0});
-      }
+    const prev = tokens[tokens.length - 1];
+    const isUnaryMinus = (
+      value === '-' &&
+      (!prev || prev.type === 'operator' ||
+        (prev.type === 'paren' && prev.value === '(') ||
+        prev.type === 'unary' || prev.type === 'function' ||
+        prev.type === 'comma')
+    );
+    if (isUnaryMinus) {
+      tokens.push({type: 'unary', value: 'neg'});
+      return;
     }
     tokens.push({type: 'operator', value});
   };
@@ -295,8 +298,12 @@ function tokenize(expr) {
           i++;
         } else break;
       }
-      // валидируем формат (например, не две точки)
-      tokens.push({type: 'number', value: parseFloat(num)});
+      // валидируем формат (например, не две точки, не одиночная точка)
+      const parsed = parseFloat(num);
+      if (Number.isNaN(parsed)) {
+        throw new Error('Некорректное число');
+      }
+      tokens.push({type: 'number', value: parsed});
       i++;
       continue;
     }
@@ -448,6 +455,9 @@ function evaluateRPN(tokens) {
         case '√':
           if (value < 0) throw new Error('Подкоренное выражение должно быть ≥ 0');
           stack.push(Math.sqrt(value));
+          break;
+        case 'neg':
+          stack.push(-value);
           break;
         default:
           throw new Error('Неизвестный унарный оператор');
@@ -602,8 +612,18 @@ function insertValue(val) {
       }
       return;
     }
+    // если выражение состоит только из унарного минуса и нажали другой оператор — игнорируем
+    if (expression === '-' && val !== '-') {
+      return;
+    }
     // если последний — оператор, заменим его (чтобы не было ++ или +-)
     if (isOperatorChar(last)) {
+      // допускаем вставку унарного минуса после оператора (5*-3)
+      if (val === '-' && last !== '-') {
+        expression += val;
+        updateDisplay();
+        return;
+      }
       expression = expression.slice(0, -1) + val;
     } else {
       expression += val;
