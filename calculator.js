@@ -505,7 +505,22 @@ function evaluateRPN(tokens) {
  */
 function computeExpression(infix) {
   if (!infix || infix.trim() === '') throw new Error('Введите выражение');
-  const rpn = infixToRPN(infix);
+  // --- НАЧАЛО УЛУЧШЕНИЯ ---
+  // Добавляем неявное умножение перед токенизацией
+  let prepared = infix.replace(/\s+/g, ''); // убираем пробелы
+
+  // 1. Число перед скобкой или функцией: 2( -> 2*(, 2sin -> 2*sin
+  // Но аккуратно, чтобы не сломать 0.5 (точка уже обработана)
+  prepared = prepared.replace(/(\d)([a-zA-Z(√|])/g, '$1*$2');
+
+  // 2. Скобка/модуль перед числом или функцией: )2 -> )*2, |2 -> |*2
+  prepared = prepared.replace(/([)|])([a-zA-Z\d(√])/g, '$1*$2');
+
+  // 3. Константы (pi, e) перед чем-то
+  prepared = prepared.replace(/(pi|e)([a-zA-Z\d(√|])/g, '$1*$2');
+  // --- КОНЕЦ УЛУЧШЕНИЯ ---
+
+  const rpn = infixToRPN(prepared);
   return evaluateRPN(rpn);
 }
 
